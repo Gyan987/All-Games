@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Car Racing Game</title>
+  <style>
+    * { margin: 0; padding: 0; }
+    body {
+      background: url(27471.jpg) no-repeat center;
+      background-size: cover;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+    #road {
+      background: url(road.png) repeat-y;
+      height: 1200vh;
+      width: 50vw;
+      position: relative;
+      top: -80vh;
+      z-index: -9;
+    }
+    #start, #restart {
+      position: absolute;
+      z-index: 100;
+      font-size: 2rem;
+      background-color: rgb(245, 99, 99);
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    #restart { display: none; }
+    #score, #speed, #lives {
+      position: absolute;
+      top: 20px;
+      font-size: 1.5rem;
+      padding: 5px 15px;
+      background-color: white;
+      border-radius: 20px;
+    }
+    #score { left: 20px; }
+    #speed { left: 200px; }
+    #lives { left: 380px; }
+    .ecarimg, .mycarimg, .obstacle {
+      width: 80px;
+      border: 2px solid red;
+    }
+    #mycar {
+      width: 100px;
+      height: 100px;
+      position: relative;
+      top: 15vh;
+    }
+
+    /* Enemy cars now swerve left and right */
+    @keyframes ecar1 {
+      0% { top: -30vh; left: 200px; }
+      50% { left: 350px; }
+      100% { top: 100vh; left: 250px; }
+    }
+    @keyframes ecar2 {
+      0% { top: -50vh; left: 100px; }
+      50% { left: 200px; }
+      100% { top: 100vh; left: 150px; }
+    }
+    @keyframes ecar3 {
+      0% { top: -60vh; left: -100px; }
+      50% { left: -50px; }
+      100% { top: 100vh; left: -120px; }
+    }
+    @keyframes ecar4 {
+      0% { top: -80vh; left: -300px; }
+      50% { left: -200px; }
+      100% { top: 100vh; left: -250px; }
+    }
+
+    @keyframes roadanimation {
+      from { top: -1100vh; }
+      to { top: -200vh; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="score">Score : 0</div>
+  <div id="speed">Speed : 3</div>
+  <div id="lives">Lives : 3</div>
+  <button id="start">Start</button>
+  <button id="restart">Restart</button>
+
+  <div>
+    <div id="enemycar1"><img id="ecarimg1" class="ecarimg" src="car2.png"></div>
+    <div id="enemycar2"><img id="ecarimg2" class="ecarimg" src="car3.png"></div>
+    <div id="enemycar3"><img id="ecarimg3" class="ecarimg" src="car2.png"></div>
+    <div id="enemycar4"><img id="ecarimg4" class="ecarimg" src="car3.png"></div>
+  </div>
+
+  <div id="mycar"><img id="mycarimg" class="mycarimg" src="car1.png"></div>
+  <div id="road"></div>
+
+  <!-- Obstacles -->
+  <div id="obstacle1" class="obstacle" style="position:relative; top:-200px; left:150px;">
+    <img src="cone.png" width="60">
+  </div>
+  <div id="obstacle2" class="obstacle" style="position:relative; top:-400px; left:250px;">
+    <img src="oil.png" width="60">
+  </div>
+
+  <script>
+    let t = 15, l = 0, speed = 3, lives = 3, n = 0;
+    let gameInterval;
+
+    function collide(a, b) {
+      return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+    }
+
+    function startGame() {
+      document.getElementById("start").style.display = 'none';
+      document.getElementById("restart").style.display = 'none';
+      document.getElementById("road").style.animation = 'roadanimation 20s linear infinite';
+      lives = 3; n = 0; speed = 3;
+      document.getElementById("lives").innerText = "Lives : " + lives;
+      document.getElementById("speed").innerText = "Speed : " + speed;
+
+      // Enemy car animations with swerving
+      document.getElementById("enemycar1").style.animation = 'ecar1 3s linear infinite';
+      document.getElementById("enemycar2").style.animation = 'ecar2 5s linear infinite';
+      document.getElementById("enemycar3").style.animation = 'ecar3 6s linear infinite';
+      document.getElementById("enemycar4").style.animation = 'ecar4 4s linear infinite';
+
+      // Score & collision loop
+      gameInterval = setInterval(() => {
+        document.getElementById("score").innerText = `Score : ${n}`;
+        n++;
+
+        let mycar = document.getElementById("mycarimg").getBoundingClientRect();
+        let e1 = document.getElementById("ecarimg1").getBoundingClientRect();
+        let e2 = document.getElementById("ecarimg2").getBoundingClientRect();
+        let e3 = document.getElementById("ecarimg3").getBoundingClientRect();
+        let e4 = document.getElementById("ecarimg4").getBoundingClientRect();
+        let o1 = document.getElementById("obstacle1").getBoundingClientRect();
+        let o2 = document.getElementById("obstacle2").getBoundingClientRect();
+
+        if (collide(mycar, e1) || collide(mycar, e2) || collide(mycar, e3) || collide(mycar, e4) || collide(mycar, o1) || collide(mycar, o2)) {
+          lives--;
+          document.getElementById("lives").innerText = "Lives : " + lives;
+          if (lives <= 0) {
+            clearInterval(gameInterval);
+            alert("GAME OVER!");
+            document.getElementById("restart").style.display = 'block';
+          }
+        }
+
+        // Level progression: increase speed every 50 points
+        if (n % 50 === 0) {
+          speed++;
+          document.getElementById("speed").innerText = "Speed : " + speed;
+        }
+      }, 100);
+    }
+
+    document.getElementById("start").addEventListener("click", startGame);
+    document.getElementById("restart").addEventListener("click", startGame);
+
+    // Controls
+    window.addEventListener("keydown", function (x) {
+      if (x.keyCode == 38) t -= speed; // Up
+      if (x.keyCode == 40) t += speed; // Down
+      if (x.keyCode == 37) l -= speed; // Left
+      if (x.keyCode == 39) l += speed; // Right
+      if (x.keyCode == 87) t -= speed; // W
+      if (x.keyCode == 83) t += speed; // S
+      if (x.keyCode == 65) l -= speed; // A
+      if (x.keyCode == 68) l += speed; // D
+      if (x.keyCode == 187) speed++;   // '+'
+      if (x.keyCode == 189 && speed > 1) speed--; // '-'
+      document.getElementById("mycar").style.top = `${t}vh`;
+      document.getElementById("mycar").style.left = `${l}vw`;
+      document.getElementById("speed").innerText = "Speed : " + speed;
+    });
+  </script>
+</body>
+</html>
